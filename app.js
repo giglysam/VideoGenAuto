@@ -1,6 +1,6 @@
 const DEFAULT_CONFIG = {
   targetUrl: "https://docs.google.com/videos/u/0/create?usp=vids_home",
-  containerCount: 2,
+  containerCount: 1,
   promptSplitMode: "line",
   openVeoFirst: true,
   reloadBeforeEachPrompt: true,
@@ -82,6 +82,8 @@ const elements = {
   attachIngredientFiles: document.querySelector("#attachIngredientFiles"),
   ingredientFiles: document.querySelector("#ingredientFiles"),
   buildContainersButton: document.querySelector("#buildContainersButton"),
+  openTargetButton: document.querySelector("#openTargetButton"),
+  refreshFramesButton: document.querySelector("#refreshFramesButton"),
   startQueueButton: document.querySelector("#startQueueButton"),
   stopQueueButton: document.querySelector("#stopQueueButton"),
   downloadAllButton: document.querySelector("#downloadAllButton"),
@@ -170,6 +172,11 @@ class FrameWorker {
 
     this.card.querySelector(".reload-frame").addEventListener("click", () => {
       this.load(state.config.targetUrl).catch((error) => this.fail(error));
+    });
+
+    this.card.querySelector(".open-frame-tab").addEventListener("click", () => {
+      openExternal(state.config.targetUrl);
+      this.log("Opened creator page in a new tab for Google sign-in/access.");
     });
 
     this.card.querySelector(".calibrate-toggle").addEventListener("click", () => {
@@ -611,6 +618,20 @@ function bindStaticEvents() {
     buildContainers();
   });
 
+  elements.openTargetButton.addEventListener("click", () => {
+    syncConfigFromUi();
+    openExternal(state.config.targetUrl);
+    setGlobalStatus("Opened sign-in tab", "running");
+  });
+
+  elements.refreshFramesButton.addEventListener("click", () => {
+    syncConfigFromUi();
+    state.workers.forEach((worker) => {
+      worker.load(state.config.targetUrl).catch((error) => worker.fail(error));
+    });
+    setGlobalStatus("Refreshing", "running");
+  });
+
   elements.startQueueButton.addEventListener("click", () => {
     startQueue().catch((error) => {
       if (error instanceof QueueStoppedError) {
@@ -1029,6 +1050,10 @@ function downloadUrl(url, filename) {
   document.body.appendChild(anchor);
   anchor.click();
   anchor.remove();
+}
+
+function openExternal(url) {
+  window.open(url, "_blank", "noopener,noreferrer");
 }
 
 function downloadBlob(text, filename, type) {
