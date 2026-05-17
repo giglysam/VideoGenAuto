@@ -28,6 +28,8 @@ Install dependencies:
 npm install
 ```
 
+This project targets Node.js 18 or newer.
+
 Start the development server:
 
 ```bash
