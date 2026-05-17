@@ -1,0 +1,455 @@
+:root {
+  color-scheme: dark;
+  --bg: #071018;
+  --panel: #0e1a25;
+  --panel-2: #122331;
+  --border: #244056;
+  --border-strong: #3b6685;
+  --text: #e7f1fb;
+  --muted: #97abc0;
+  --muted-2: #6e8499;
+  --primary: #47b6ff;
+  --primary-2: #227bc8;
+  --danger: #f25f5c;
+  --success: #51d88a;
+  --warning: #ffd166;
+  --shadow: 0 24px 90px rgba(0, 0, 0, 0.34);
+  --radius: 18px;
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+  background:
+    radial-gradient(circle at 12% 0%, rgba(71, 182, 255, 0.18), transparent 31rem),
+    radial-gradient(circle at 92% 9%, rgba(81, 216, 138, 0.12), transparent 34rem),
+    var(--bg);
+}
+
+body {
+  min-height: 100%;
+  margin: 0;
+  color: var(--text);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+code {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.45rem;
+  padding: 0.05rem 0.35rem;
+  background: rgba(0, 0, 0, 0.26);
+  color: #bfe6ff;
+}
+
+.app-header,
+.app-shell {
+  width: min(1680px, calc(100vw - 32px));
+  margin-inline: auto;
+}
+
+.app-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 2rem;
+  padding: 2rem 0 1.25rem;
+}
+
+.app-header h1,
+.workspace-header h2,
+.section-heading h2,
+.worker-toolbar h3 {
+  margin: 0;
+  letter-spacing: -0.035em;
+}
+
+.app-header h1 {
+  font-size: clamp(2rem, 4vw, 4rem);
+}
+
+.lede {
+  max-width: 68rem;
+  margin: 0.7rem 0 0;
+  color: var(--muted);
+  font-size: 1.05rem;
+  line-height: 1.55;
+}
+
+.eyebrow {
+  margin: 0 0 0.35rem;
+  color: var(--primary);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.header-actions,
+.button-row,
+.worker-actions,
+.coordinate-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.app-shell {
+  display: grid;
+  gap: 1rem;
+  padding-bottom: 2rem;
+}
+
+.panel,
+.worker-card {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, rgba(18, 35, 49, 0.95), rgba(9, 19, 29, 0.94));
+  box-shadow: var(--shadow);
+}
+
+.panel {
+  padding: 1rem;
+}
+
+.controls-panel,
+.selectors-panel {
+  display: grid;
+  gap: 1rem;
+}
+
+.section-heading,
+.workspace-header,
+.worker-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.notice {
+  border: 1px solid rgba(255, 209, 102, 0.26);
+  border-radius: 14px;
+  padding: 0.85rem 1rem;
+  background: rgba(255, 209, 102, 0.08);
+  color: #ffe2a1;
+  line-height: 1.45;
+}
+
+.form-grid,
+.selector-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.selector-grid.two {
+  margin-top: 0.85rem;
+}
+
+.span-2 {
+  grid-column: span 2;
+}
+
+.field {
+  display: grid;
+  gap: 0.42rem;
+}
+
+.field span,
+.check-option span {
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  outline: none;
+  background: rgba(2, 8, 14, 0.68);
+  color: var(--text);
+}
+
+input,
+select {
+  min-height: 2.7rem;
+  padding: 0.65rem 0.75rem;
+}
+
+textarea {
+  resize: vertical;
+  padding: 0.75rem;
+  line-height: 1.45;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(71, 182, 255, 0.18);
+}
+
+.option-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.check-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.check-option input {
+  width: auto;
+  min-height: auto;
+  margin-top: 0.14rem;
+}
+
+.file-row {
+  display: grid;
+  grid-template-columns: minmax(16rem, 28rem) 1fr;
+  gap: 1rem;
+  align-items: end;
+}
+
+.file-row p,
+.help-text {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.button {
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  min-height: 2.55rem;
+  padding: 0.62rem 1rem;
+  background: #1b3143;
+  color: var(--text);
+  font-weight: 800;
+  transition:
+    transform 140ms ease,
+    border-color 140ms ease,
+    background 140ms ease,
+    opacity 140ms ease;
+}
+
+.button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: var(--border-strong);
+  background: #25465f;
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.button.primary {
+  border-color: transparent;
+  background: linear-gradient(135deg, var(--primary), var(--primary-2));
+  color: #03111c;
+}
+
+.button.danger {
+  border-color: rgba(242, 95, 92, 0.45);
+  background: rgba(242, 95, 92, 0.14);
+  color: #ffc9c8;
+}
+
+.button.ghost {
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.button.small {
+  min-height: 2.2rem;
+  padding: 0.48rem 0.78rem;
+  font-size: 0.84rem;
+}
+
+.button.tiny {
+  min-height: 1.85rem;
+  padding: 0.34rem 0.55rem;
+  font-size: 0.74rem;
+}
+
+.status-pill,
+.queue-stats {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  min-width: 5rem;
+  padding: 0.38rem 0.7rem;
+  background: rgba(255, 255, 255, 0.045);
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.status-pill.running {
+  border-color: rgba(71, 182, 255, 0.35);
+  color: #bfe6ff;
+}
+
+.status-pill.done {
+  border-color: rgba(81, 216, 138, 0.35);
+  color: #b9ffd8;
+}
+
+.status-pill.error {
+  border-color: rgba(242, 95, 92, 0.4);
+  color: #ffc9c8;
+}
+
+details {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 0.85rem;
+  background: rgba(0, 0, 0, 0.13);
+}
+
+summary {
+  cursor: pointer;
+  color: var(--text);
+  font-weight: 900;
+}
+
+details > * + * {
+  margin-top: 0.85rem;
+}
+
+.workspace-header {
+  padding: 0.75rem 0.25rem 0;
+}
+
+.workspace {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 42rem), 1fr));
+  gap: 1rem;
+}
+
+.worker-card {
+  display: grid;
+  gap: 0.85rem;
+  min-width: 0;
+  padding: 0.85rem;
+}
+
+.frame-stack {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  min-height: 35rem;
+  background:
+    linear-gradient(45deg, rgba(255, 255, 255, 0.03) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(255, 255, 255, 0.03) 25%, transparent 25%),
+    #050b11;
+  background-size: 18px 18px;
+}
+
+.target-frame,
+.frame-overlay {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.target-frame {
+  border: 0;
+  background: #fff;
+}
+
+.frame-overlay {
+  pointer-events: none;
+}
+
+.worker-card.calibrating .frame-overlay {
+  cursor: crosshair;
+  pointer-events: auto;
+}
+
+.worker-card.calibrating .frame-stack {
+  outline: 3px solid rgba(71, 182, 255, 0.42);
+}
+
+.coordinate-actions {
+  align-items: center;
+  padding: 0.65rem;
+  border: 1px dashed rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+}
+
+.last-point {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.worker-log {
+  overflow: auto;
+  min-height: 8rem;
+  max-height: 15rem;
+  margin: 0;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 0.75rem;
+  background: rgba(0, 0, 0, 0.34);
+  color: #c9e5fb;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 980px) {
+  .app-header,
+  .section-heading,
+  .workspace-header,
+  .worker-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .form-grid,
+  .selector-grid,
+  .selector-grid.two,
+  .option-grid,
+  .file-row {
+    grid-template-columns: 1fr;
+  }
+
+  .span-2 {
+    grid-column: auto;
+  }
+
+  .frame-stack {
+    min-height: 27rem;
+  }
+}
