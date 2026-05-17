@@ -1,25 +1,57 @@
 # VideoGenAuto
 
-VideoGenAuto is a Vite dashboard for running embedded video-creator sessions through
-iframe/canvas workspaces. The UI is intentionally simple: choose how many canvases you
-want, paste prompts, create the canvases, and run the queue.
+VideoGenAuto is a Vite + Vercel web app for running video-generation prompts from a
+website without embedding Google in an iframe and without using a browser extension.
 
-## What it does
+Google blocks `docs.google.com` inside third-party iframes. The working web-only
+architecture is:
 
-- Embeds the configured creator URL in one or more iframe/canvas containers.
-- Places a calibrated HTML5 canvas directly over each iframe.
-- Accepts a main prompt queue and assigns prompts across available containers.
-- Uses DOM selectors from the provided Veo/Google markup to:
-  - open the Veo / AI video panel,
-  - locate and fill the prompt textarea,
-  - dispatch input/change events,
-  - optionally click Avatar or Ingredients controls,
-  - click Generate,
-  - discover generated `video[src]` candidates.
-- Falls back to calibrated X/Y iframe coordinates when selectors drift.
-- Shows a download button outside each iframe once a generated video URL is found.
+```text
+Vercel website UI -> Vercel API route -> remote authenticated Chrome/Chromium browser
+```
 
-## Running locally with Vite
+The Vercel API connects to the remote browser over a Chrome DevTools Protocol WebSocket
+(`BROWSER_WS_ENDPOINT`) using `playwright-core`. That browser must already be signed in to
+the Google account that has access to the video creator.
+
+## Features
+
+- Simple website UI: target URL, prompts, parallel tab count, start button, results.
+- No iframe dependency.
+- No extension dependency.
+- Server-side automation route at `api/generate.js`.
+- Uses the provided Veo/Google selectors for:
+  - opening the Veo button/panel,
+  - filling the prompt textarea,
+  - clicking Generate,
+  - detecting generated video URLs.
+
+## Required environment variable
+
+Set this in Vercel:
+
+```text
+BROWSER_WS_ENDPOINT=wss://your-remote-browser-cdp-endpoint
+```
+
+The endpoint must point to a remote Chrome/Chromium browser that:
+
+1. Supports CDP / Playwright `chromium.connectOverCDP`.
+2. Has a persistent profile/session.
+3. Is already logged in to the Google account with video-creator access.
+
+Examples of services that can provide this kind of remote browser:
+
+- Browserless
+- Browserbase
+- Steel Browser
+- A self-hosted Chrome running with `--remote-debugging-port` behind a secure WebSocket
+  proxy
+
+Do not put Google passwords into this app. Sign in to the remote browser using the
+provider's secure live browser/session tools, then keep that browser profile persistent.
+
+## Running locally
 
 Install dependencies:
 
@@ -27,90 +59,41 @@ Install dependencies:
 npm install
 ```
 
-This project targets Node.js 18 or newer.
+Create a local env file or export the browser endpoint:
 
-Start the development server:
+```bash
+export BROWSER_WS_ENDPOINT="wss://your-remote-browser-cdp-endpoint"
+```
+
+Start the app:
 
 ```bash
 npm run dev
 ```
 
-Then open the URL printed by Vite, usually:
+Open:
 
 ```text
 http://localhost:5173
 ```
 
-Create a production build:
+## Vercel deployment
 
-```bash
-npm run build
-```
-
-Preview the production build locally:
-
-```bash
-npm run preview
-```
-
-Preview usually serves:
-
-```text
-http://localhost:4173
-```
-
-## Publishing on Vercel
-
-The repository includes `vercel.json` with:
+The repo includes `vercel.json`:
 
 - install command: `npm install`
 - build command: `npm run build`
 - output directory: `dist`
+- API max duration for `api/generate.js`: `300`
 
-In Vercel, import the GitHub repository and keep the default Vite/static settings. Vercel
-will run the build and publish the generated `dist` folder.
+After importing the repository into Vercel, add `BROWSER_WS_ENDPOINT` in Project Settings
+-> Environment Variables and redeploy.
 
-The default target URL is:
+## Notes and limits
 
-```text
-https://docs.google.com/videos/u/0/create?usp=vids_home
-```
-
-## Important Google access requirement
-
-If the embedded Google page says "refused to connect", that is Google intentionally
-blocking `docs.google.com` from being framed by another site. A Vercel frontend cannot
-repair that with different iframe headers. The app now detects this case and shows a
-clear blocked-state instead of a broken iframe.
-
-If Google says "You need access", the browser is not authenticated with a Google account
-that can use that creator URL. A Vercel frontend cannot add, spoof, or override Google
-authentication headers for an iframe. The page must use the user's real Google session
-cookies.
-
-Use the **Open Google sign-in tab** button to open the creator page outside the iframe.
-If you have a trusted same-origin proxy/custom browser URL that is allowed to be framed,
-paste it into **Embeddable iframe URL** and then click **Refresh iframes**.
-
-Browser isolation can also prevent a parent page from reading or controlling a
-cross-origin iframe. This app does not disable or bypass browser security. The automation
-module expects your own trusted setup to make `iframe.contentDocument` accessible, such as
-a same-origin development proxy, an internal controlled browser profile, or another
-approved environment.
-
-If iframe DOM access is unavailable, the dashboard can still display the iframe and canvas,
-but selector automation and coordinate event dispatch will log an access error.
-
-## Typical workflow
-
-1. Click **Open Google sign-in tab** and make sure the correct account has access.
-2. Choose how many canvases to create.
-3. Paste one prompt per line.
-4. Click **Create canvases**.
-5. Click **Start**.
-6. If Google still shows the access page, finish sign-in in the Google tab and click
-   **Refresh iframes**.
-7. Download ready videos with each worker's external **Download video** button or with
-   **Download all ready videos**.
-
-Selector and coordinate settings are available in the collapsed advanced settings section.
+- If `BROWSER_WS_ENDPOINT` is missing, the frontend will show "Setup needed".
+- Vercel functions have execution time limits. Long video renders may require a provider
+  with background jobs/webhooks or a dedicated backend worker if generations take longer
+  than the function limit.
+- This app cannot bypass Google access controls. The remote browser must use an account
+  that legitimately has access.
