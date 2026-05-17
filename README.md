@@ -1,8 +1,9 @@
 # VideoGenAuto
 
-VideoGenAuto is a static dashboard for running multiple embedded video-creator sessions
+VideoGenAuto is a Vite dashboard for running multiple embedded video-creator sessions
 through an iframe/canvas workspace. It was built for an internal environment where the
-configured browser/proxy setup permits programmatic iframe DOM access.
+configured browser/proxy setup permits programmatic iframe DOM access and can be deployed
+to Vercel as a static build.
 
 ## What it does
 
@@ -19,19 +20,54 @@ configured browser/proxy setup permits programmatic iframe DOM access.
 - Falls back to calibrated X/Y iframe coordinates when selectors drift.
 - Shows a download button outside each iframe once a generated video URL is found.
 
-## Running locally
+## Running locally with Vite
 
-This is a dependency-free static app:
+Install dependencies:
 
 ```bash
-python3 -m http.server 4173
+npm install
 ```
 
-Then open:
+Start the development server:
+
+```bash
+npm run dev
+```
+
+Then open the URL printed by Vite, usually:
+
+```text
+http://localhost:5173
+```
+
+Create a production build:
+
+```bash
+npm run build
+```
+
+Preview the production build locally:
+
+```bash
+npm run preview
+```
+
+Preview usually serves:
 
 ```text
 http://localhost:4173
 ```
+
+## Publishing on Vercel
+
+The repository includes `vercel.json` with:
+
+- install command: `npm install`
+- build command: `npm run build`
+- output directory: `dist`
+
+In Vercel, import the GitHub repository and keep the default Vite/static settings. Vercel
+will run the build and publish the generated `dist` folder.
 
 The default target URL is:
 
