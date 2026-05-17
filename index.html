@@ -3,206 +3,109 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>VideoGenAuto iframe automation dashboard</title>
-    <link rel="stylesheet" href="./styles.css">
+    <title>VideoGenAuto</title>
+    <link rel="stylesheet" href="/styles.css">
   </head>
   <body>
-    <header class="app-header simple-hero">
-      <div>
+    <main class="page">
+      <section class="hero">
         <p class="eyebrow">VideoGenAuto</p>
-        <h1>Simple iframe canvas generator</h1>
-        <p class="lede">
-          Choose how many canvas/iframe workspaces you want, paste prompts, and run the
-          queue.
+        <h1>Website video automation</h1>
+        <p>
+          No iframe. No extension. The website sends your prompts to a server-side
+          browser session that controls the Google video creator in a real browser tab.
         </p>
-      </div>
-      <span class="status-pill" id="globalStatus">Idle</span>
-    </header>
+      </section>
 
-    <main class="app-shell">
-      <section class="panel controls-panel simple-panel" aria-labelledby="setup-title">
-        <div class="section-heading">
+      <section class="panel status-panel">
+        <div>
+          <p class="eyebrow">Backend</p>
+          <h2>Remote browser connection</h2>
+          <p id="backendStatus">Checking backend...</p>
+        </div>
+        <button class="button ghost" id="checkBackendButton" type="button">Check again</button>
+      </section>
+
+      <section class="panel">
+        <div class="section-title">
           <div>
             <p class="eyebrow">Setup</p>
-            <h2 id="setup-title">Create canvases</h2>
+            <h2>Generate videos</h2>
           </div>
-          <div class="queue-stats" id="queueStats">0 prompts queued</div>
+          <span class="pill" id="runStatus">Idle</span>
         </div>
 
-        <div class="notice auth-notice">
-          <strong>Google access:</strong>
-          Google blocks <code>docs.google.com</code> from being embedded in a normal
-          Vercel iframe, so the app opens Google in a real tab by default. If you have a
-          trusted same-origin/proxy URL that is allowed to be framed, paste it below.
+        <div class="notice">
+          Google blocks normal iframe embedding. This website-only version works by
+          connecting the Vercel API to a remote Chrome/Chromium session that is already
+          signed in to the Google account with access.
         </div>
 
-        <div class="simple-form">
-          <label class="field target-field">
+        <div class="form-grid">
+          <label class="field span-2">
             <span>Google creator URL</span>
             <input id="targetUrl" type="url" autocomplete="off">
           </label>
 
-          <label class="field embed-field">
-            <span>Embeddable iframe URL (optional proxy/custom browser URL)</span>
-            <input id="embedUrl" type="url" autocomplete="off" placeholder="Leave empty unless you have an iframe-safe/proxied URL">
+          <label class="field">
+            <span>Parallel browser tabs</span>
+            <input id="parallelCount" type="number" min="1" max="4" step="1" value="1">
           </label>
 
-          <label class="field count-field">
-            <span>How many canvases?</span>
-            <input id="containerCount" type="number" min="1" max="8" step="1">
+          <label class="field">
+            <span>Wait for generated video</span>
+            <select id="waitForResult">
+              <option value="true">Yes, wait for video URL</option>
+              <option value="false">No, only submit prompts</option>
+            </select>
           </label>
 
-          <label class="field prompt-field">
+          <label class="field span-2">
             <span>Prompts</span>
-            <textarea id="promptQueue" rows="5" spellcheck="true" placeholder="One video prompt per line."></textarea>
+            <textarea id="prompts" rows="8" placeholder="One video prompt per line"></textarea>
           </label>
         </div>
 
-        <div class="button-row">
-          <button class="button ghost" id="openTargetButton" type="button">Open Google sign-in tab</button>
-          <button class="button" id="buildContainersButton" type="button">Create canvases</button>
-          <button class="button" id="refreshFramesButton" type="button">Refresh iframes</button>
-          <button class="button primary" id="startQueueButton" type="button">Start</button>
-          <button class="button danger" id="stopQueueButton" type="button">Stop</button>
-          <button class="button" id="downloadAllButton" type="button" disabled>Download all ready videos</button>
-        </div>
-      </section>
-
-      <details class="panel advanced-panel">
-        <summary>Advanced automation settings</summary>
-        <p class="help-text">
-          Leave these defaults unless the Google/Veo HTML changes. They are hidden here to keep
-          the app simple.
-        </p>
-        <div class="advanced-actions">
-          <button class="button ghost" id="exportConfigButton" type="button">Export config</button>
-          <button class="button ghost" id="importConfigButton" type="button">Import config</button>
-          <button class="button ghost" id="restoreDefaultsButton" type="button">Restore defaults</button>
-        </div>
-        <div class="option-grid">
-          <label class="check-option">
-            <input id="openVeoFirst" type="checkbox">
-            <span>Open Veo before filling prompt</span>
-          </label>
-          <label class="check-option">
-            <input id="reloadBeforeEachPrompt" type="checkbox">
-            <span>Reload iframe before each prompt</span>
-          </label>
-          <label class="check-option">
-            <input id="useCoordinateFallback" type="checkbox">
-            <span>Use canvas coordinate fallback</span>
-          </label>
-          <label class="check-option">
-            <input id="autoDownload" type="checkbox">
-            <span>Auto-download discovered videos</span>
-          </label>
-          <label class="check-option">
-            <input id="attachIngredientFiles" type="checkbox">
-            <span>Attach ingredient images</span>
-          </label>
-        </div>
-        <div class="hidden-defaults">
-          <select id="promptSplitMode">
-            <option value="line">One prompt per line</option>
-            <option value="blank">Separate prompts by blank lines</option>
-          </select>
-          <input id="ingredientFiles" type="file" accept="image/png,image/jpeg" multiple>
-        </div>
-        <div class="selector-grid">
-          <label class="field">
-            <span>Veo toolbar button</span>
-            <textarea id="selectorOpenVeo" rows="4"></textarea>
-          </label>
-          <label class="field">
-            <span>Prompt textarea</span>
-            <textarea id="selectorPrompt" rows="4"></textarea>
-          </label>
-          <label class="field">
-            <span>Avatar button</span>
-            <textarea id="selectorAvatar" rows="4"></textarea>
-          </label>
-          <label class="field">
-            <span>Ingredients button / file input</span>
-            <textarea id="selectorIngredients" rows="4"></textarea>
-          </label>
-          <label class="field">
-            <span>Generate button</span>
-            <textarea id="selectorGenerate" rows="4"></textarea>
-          </label>
-          <label class="field">
-            <span>Generated video candidates</span>
-            <textarea id="selectorVideos" rows="4"></textarea>
-          </label>
-          <label class="field">
-            <span>Timing JSON</span>
-            <textarea id="timingJson" rows="6"></textarea>
-          </label>
-          <label class="field">
-            <span>Coordinate map JSON</span>
-            <textarea id="coordinateJson" rows="6"></textarea>
-          </label>
-        </div>
-      </details>
-
-      <section class="workspace-header">
-        <div>
-          <p class="eyebrow">Canvases</p>
-          <h2>Your iframe workspaces</h2>
-        </div>
-      </section>
-
-      <section id="workspace" class="workspace" aria-live="polite"></section>
-    </main>
-
-    <template id="workerCardTemplate">
-      <article class="worker-card">
-        <div class="worker-toolbar">
-          <div>
-            <p class="eyebrow worker-number"></p>
-            <h3 class="worker-title"></h3>
-          </div>
-          <span class="status-pill worker-status">Idle</span>
-        </div>
-
-        <div class="frame-stack">
-          <iframe
-            class="target-frame"
-            title="Embedded video generator"
-            referrerpolicy="strict-origin-when-cross-origin"
-            allow="clipboard-read; clipboard-write; fullscreen; microphone; camera; autoplay"
-          ></iframe>
-          <canvas class="frame-overlay" aria-label="Coordinate calibration overlay"></canvas>
-          <div class="frame-message">
-            <h4>Iframe blocked</h4>
-            <p></p>
-            <button class="button small open-frame-tab" type="button">Open Google tab</button>
-          </div>
-        </div>
-
-        <div class="worker-actions">
-          <button class="button small run-one" type="button">Run next</button>
-          <button class="button small reload-frame" type="button">Refresh iframe</button>
-          <button class="button small open-frame-tab" type="button">Open tab</button>
-          <button class="button small download-video" type="button" disabled>Download video</button>
-        </div>
-
-        <details class="worker-advanced">
-          <summary>Canvas coordinate tools</summary>
-          <div class="coordinate-actions">
-            <button class="button small calibrate-toggle" type="button">Calibrate overlay</button>
-            <span class="last-point">Last point: none</span>
-            <button class="button tiny map-point" data-action="openVeo" type="button">Use as Veo</button>
-            <button class="button tiny map-point" data-action="prompt" type="button">Use as Prompt</button>
-            <button class="button tiny map-point" data-action="ingredients" type="button">Use as Ingredients</button>
-            <button class="button tiny map-point" data-action="avatar" type="button">Use as Avatar</button>
-            <button class="button tiny map-point" data-action="generate" type="button">Use as Generate</button>
+        <details class="advanced">
+          <summary>Advanced selectors</summary>
+          <div class="form-grid advanced-grid">
+            <label class="field">
+              <span>Open Veo selectors</span>
+              <textarea id="openVeoSelectors" rows="5"></textarea>
+            </label>
+            <label class="field">
+              <span>Prompt textarea selectors</span>
+              <textarea id="promptSelectors" rows="5"></textarea>
+            </label>
+            <label class="field">
+              <span>Generate button selectors</span>
+              <textarea id="generateSelectors" rows="5"></textarea>
+            </label>
+            <label class="field">
+              <span>Generated video selectors</span>
+              <textarea id="videoSelectors" rows="5"></textarea>
+            </label>
           </div>
         </details>
 
-        <pre class="worker-log" aria-label="Worker log"></pre>
-      </article>
-    </template>
+        <div class="actions">
+          <button class="button primary" id="startButton" type="button">Start automation</button>
+          <button class="button" id="clearButton" type="button">Clear results</button>
+        </div>
+      </section>
 
-    <script type="module" src="./app.js"></script>
+      <section class="panel">
+        <div class="section-title">
+          <div>
+            <p class="eyebrow">Results</p>
+            <h2>Job output</h2>
+          </div>
+          <span class="pill" id="resultCount">0 results</span>
+        </div>
+        <div id="results" class="results empty">No runs yet.</div>
+      </section>
+    </main>
+
+    <script type="module" src="/app.js"></script>
   </body>
 </html>
