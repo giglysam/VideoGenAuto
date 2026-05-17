@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>VideoGenAuto iframe automation dashboard</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <header class="app-header">
+      <div>
+        <p class="eyebrow">Internal video generation automation</p>
+        <h1>Iframe + canvas video queue dashboard</h1>
+        <p class="lede">
+          Run multiple embedded creator sessions, map canvas coordinates, inject prompts,
+          click generation controls, and collect generated video download links.
+        </p>
+      </div>
+      <div class="header-actions">
+        <button class="button ghost" id="exportConfigButton" type="button">Export config</button>
+        <button class="button ghost" id="importConfigButton" type="button">Import config</button>
+      </div>
+    </header>
+
+    <main class="app-shell">
+      <section class="panel controls-panel" aria-labelledby="setup-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Setup</p>
+            <h2 id="setup-title">Target and prompt queue</h2>
+          </div>
+          <span class="status-pill" id="globalStatus">Idle</span>
+        </div>
+
+        <div class="notice">
+          <strong>Runtime assumption:</strong>
+          iframe DOM automation only works when your browser environment permits access to
+          <code>iframe.contentDocument</code> for the configured URL. This app does not bypass
+          browser isolation; use your trusted same-origin/proxy/custom-browser setup.
+        </div>
+
+        <div class="form-grid">
+          <label class="field span-2">
+            <span>Creator URL</span>
+            <input id="targetUrl" type="url" autocomplete="off">
+          </label>
+
+          <label class="field">
+            <span>Iframe containers</span>
+            <input id="containerCount" type="number" min="1" max="8" step="1">
+          </label>
+
+          <label class="field">
+            <span>Prompt split mode</span>
+            <select id="promptSplitMode">
+              <option value="line">One prompt per non-empty line</option>
+              <option value="blank">Separate prompts by blank lines</option>
+            </select>
+          </label>
+
+          <label class="field span-2">
+            <span>Main prompt input</span>
+            <textarea id="promptQueue" rows="8" spellcheck="true" placeholder="Paste prompts here. Each line or blank-line block becomes one video job."></textarea>
+          </label>
+        </div>
+
+        <div class="option-grid">
+          <label class="check-option">
+            <input id="openVeoFirst" type="checkbox">
+            <span>Click the Veo toolbar button before filling the prompt</span>
+          </label>
+          <label class="check-option">
+            <input id="reloadBeforeEachPrompt" type="checkbox">
+            <span>Reload the creator URL before each prompt</span>
+          </label>
+          <label class="check-option">
+            <input id="useCoordinateFallback" type="checkbox">
+            <span>Use calibrated X/Y fallback when selectors fail</span>
+          </label>
+          <label class="check-option">
+            <input id="autoDownload" type="checkbox">
+            <span>Auto-download discovered generated videos</span>
+          </label>
+          <label class="check-option">
+            <input id="attachIngredientFiles" type="checkbox">
+            <span>Attach selected ingredient files when possible</span>
+          </label>
+        </div>
+
+        <div class="file-row">
+          <label class="field">
+            <span>Ingredient images</span>
+            <input id="ingredientFiles" type="file" accept="image/png,image/jpeg" multiple>
+          </label>
+          <p>
+            The browser may allow passing these user-selected files into an accessible iframe file
+            input with <code>DataTransfer</code>. If not, the script still clicks Ingredients.
+          </p>
+        </div>
+
+        <div class="button-row">
+          <button class="button" id="buildContainersButton" type="button">Create / reset containers</button>
+          <button class="button primary" id="startQueueButton" type="button">Start video queue</button>
+          <button class="button danger" id="stopQueueButton" type="button">Stop queue</button>
+          <button class="button" id="downloadAllButton" type="button" disabled>Download all ready videos</button>
+        </div>
+      </section>
+
+      <section class="panel selectors-panel" aria-labelledby="selectors-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Automation</p>
+            <h2 id="selectors-title">Selectors, timing, and coordinate map</h2>
+          </div>
+          <button class="button ghost" id="restoreDefaultsButton" type="button">Restore defaults</button>
+        </div>
+
+        <details open>
+          <summary>Selector configuration</summary>
+          <p class="help-text">
+            These defaults include hooks from the provided Google/Veo HTML. Keep each selector on a
+            separate line. Text fallbacks are built into the automation for Avatar, Ingredients, and Generate.
+          </p>
+          <div class="selector-grid">
+            <label class="field">
+              <span>Veo toolbar button</span>
+              <textarea id="selectorOpenVeo" rows="5"></textarea>
+            </label>
+            <label class="field">
+              <span>Prompt textarea</span>
+              <textarea id="selectorPrompt" rows="5"></textarea>
+            </label>
+            <label class="field">
+              <span>Avatar button</span>
+              <textarea id="selectorAvatar" rows="5"></textarea>
+            </label>
+            <label class="field">
+              <span>Ingredients button / file input</span>
+              <textarea id="selectorIngredients" rows="5"></textarea>
+            </label>
+            <label class="field">
+              <span>Generate button</span>
+              <textarea id="selectorGenerate" rows="5"></textarea>
+            </label>
+            <label class="field">
+              <span>Generated video candidates</span>
+              <textarea id="selectorVideos" rows="5"></textarea>
+            </label>
+          </div>
+        </details>
+
+        <details>
+          <summary>Timing and coordinate JSON</summary>
+          <div class="selector-grid two">
+            <label class="field">
+              <span>Timing JSON</span>
+              <textarea id="timingJson" rows="8"></textarea>
+            </label>
+            <label class="field">
+              <span>Coordinate map JSON</span>
+              <textarea id="coordinateJson" rows="8"></textarea>
+            </label>
+          </div>
+          <p class="help-text">
+            Coordinate values are iframe-relative CSS pixels. Turn on calibration in a worker card,
+            click the overlay, then assign that point to Veo, Prompt, Ingredients, Avatar, or Generate.
+          </p>
+        </details>
+      </section>
+
+      <section class="workspace-header">
+        <div>
+          <p class="eyebrow">Workers</p>
+          <h2>Iframe containers and canvas overlays</h2>
+        </div>
+        <div class="queue-stats" id="queueStats">0 prompts queued</div>
+      </section>
+
+      <section id="workspace" class="workspace" aria-live="polite"></section>
+    </main>
+
+    <template id="workerCardTemplate">
+      <article class="worker-card">
+        <div class="worker-toolbar">
+          <div>
+            <p class="eyebrow worker-number"></p>
+            <h3 class="worker-title"></h3>
+          </div>
+          <span class="status-pill worker-status">Idle</span>
+        </div>
+
+        <div class="frame-stack">
+          <iframe
+            class="target-frame"
+            title="Embedded video generator"
+            referrerpolicy="no-referrer-when-downgrade"
+            allow="clipboard-read; clipboard-write; fullscreen; microphone; camera; autoplay"
+          ></iframe>
+          <canvas class="frame-overlay" aria-label="Coordinate calibration overlay"></canvas>
+        </div>
+
+        <div class="worker-actions">
+          <button class="button small run-one" type="button">Run next prompt</button>
+          <button class="button small reload-frame" type="button">Reload frame</button>
+          <button class="button small calibrate-toggle" type="button">Calibrate overlay</button>
+          <button class="button small download-video" type="button" disabled>Download video</button>
+        </div>
+
+        <div class="coordinate-actions">
+          <span class="last-point">Last point: none</span>
+          <button class="button tiny map-point" data-action="openVeo" type="button">Use as Veo</button>
+          <button class="button tiny map-point" data-action="prompt" type="button">Use as Prompt</button>
+          <button class="button tiny map-point" data-action="ingredients" type="button">Use as Ingredients</button>
+          <button class="button tiny map-point" data-action="avatar" type="button">Use as Avatar</button>
+          <button class="button tiny map-point" data-action="generate" type="button">Use as Generate</button>
+        </div>
+
+        <pre class="worker-log" aria-label="Worker log"></pre>
+      </article>
+    </template>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
