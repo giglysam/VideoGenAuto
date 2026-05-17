@@ -1,13 +1,12 @@
 # VideoGenAuto
 
-VideoGenAuto is a Vite dashboard for running multiple embedded video-creator sessions
-through an iframe/canvas workspace. It was built for an internal environment where the
-configured browser/proxy setup permits programmatic iframe DOM access and can be deployed
-to Vercel as a static build.
+VideoGenAuto is a Vite dashboard for running embedded video-creator sessions through
+iframe/canvas workspaces. The UI is intentionally simple: choose how many canvases you
+want, paste prompts, create the canvases, and run the queue.
 
 ## What it does
 
-- Embeds the configured creator URL in one or more iframe containers.
+- Embeds the configured creator URL in one or more iframe/canvas containers.
 - Places a calibrated HTML5 canvas directly over each iframe.
 - Accepts a main prompt queue and assigns prompts across available containers.
 - Uses DOM selectors from the provided Veo/Google markup to:
@@ -77,9 +76,17 @@ The default target URL is:
 https://docs.google.com/videos/u/0/create?usp=vids_home
 ```
 
-## Important browser-runtime requirement
+## Important Google access requirement
 
-Browser isolation normally prevents a parent page from reading or controlling a
+If the embedded Google page says "You need access", the browser is not authenticated with
+a Google account that can use that creator URL. A Vercel frontend cannot add, spoof, or
+override Google authentication headers for an iframe. The iframe must use the user's real
+Google session cookies.
+
+Use the **Open Google sign-in tab** button, sign in with the correct account, then return
+to the app and click **Refresh iframes**.
+
+Browser isolation can also prevent a parent page from reading or controlling a
 cross-origin iframe. This app does not disable or bypass browser security. The automation
 module expects your own trusted setup to make `iframe.contentDocument` accessible, such as
 a same-origin development proxy, an internal controlled browser profile, or another
@@ -90,13 +97,14 @@ but selector automation and coordinate event dispatch will log an access error.
 
 ## Typical workflow
 
-1. Paste one prompt per line, or choose blank-line separated prompt blocks.
-2. Choose how many iframe containers to create.
-3. Click **Create / reset containers**.
-4. If needed, click **Calibrate overlay** on a worker, click points over the iframe, and
-   assign those points to Veo, Prompt, Ingredients, Avatar, and Generate.
-5. Click **Start video queue**.
-6. Download ready videos with each worker's external **Download video** button or with
+1. Click **Open Google sign-in tab** and make sure the correct account has access.
+2. Choose how many canvases to create.
+3. Paste one prompt per line.
+4. Click **Create canvases**.
+5. Click **Start**.
+6. If Google still shows the access page, finish sign-in in the Google tab and click
+   **Refresh iframes**.
+7. Download ready videos with each worker's external **Download video** button or with
    **Download all ready videos**.
 
-Selector and coordinate settings can be exported/imported from the header buttons.
+Selector and coordinate settings are available in the collapsed advanced settings section.
