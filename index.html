@@ -31,16 +31,20 @@
 
         <div class="notice auth-notice">
           <strong>Google access:</strong>
-          if the iframe says "You need access", open the creator page in a new tab and
-          sign in with the Google account that has access. A Vercel frontend cannot add
-          or spoof Google auth headers for an iframe; it must use your browser's real
-          Google session cookies.
+          Google blocks <code>docs.google.com</code> from being embedded in a normal
+          Vercel iframe, so the app opens Google in a real tab by default. If you have a
+          trusted same-origin/proxy URL that is allowed to be framed, paste it below.
         </div>
 
         <div class="simple-form">
           <label class="field target-field">
-            <span>Creator URL</span>
+            <span>Google creator URL</span>
             <input id="targetUrl" type="url" autocomplete="off">
+          </label>
+
+          <label class="field embed-field">
+            <span>Embeddable iframe URL (optional proxy/custom browser URL)</span>
+            <input id="embedUrl" type="url" autocomplete="off" placeholder="Leave empty unless you have an iframe-safe/proxied URL">
           </label>
 
           <label class="field count-field">
@@ -168,6 +172,11 @@
             allow="clipboard-read; clipboard-write; fullscreen; microphone; camera; autoplay"
           ></iframe>
           <canvas class="frame-overlay" aria-label="Coordinate calibration overlay"></canvas>
+          <div class="frame-message">
+            <h4>Iframe blocked</h4>
+            <p></p>
+            <button class="button small open-frame-tab" type="button">Open Google tab</button>
+          </div>
         </div>
 
         <div class="worker-actions">

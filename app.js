@@ -1,5 +1,6 @@
 const DEFAULT_CONFIG = {
   targetUrl: "https://docs.google.com/videos/u/0/create?usp=vids_home",
+  embedUrl: "",
   containerCount: 1,
   promptSplitMode: "line",
   openVeoFirst: true,
@@ -72,6 +73,7 @@ const STORAGE_KEY = "videoGenAuto.config.v1";
 
 const elements = {
   targetUrl: document.querySelector("#targetUrl"),
+  embedUrl: document.querySelector("#embedUrl"),
   containerCount: document.querySelector("#containerCount"),
   promptSplitMode: document.querySelector("#promptSplitMode"),
   promptQueue: document.querySelector("#promptQueue"),
@@ -141,6 +143,8 @@ class FrameWorker {
     this.logEl = card.querySelector(".worker-log");
     this.lastPointEl = card.querySelector(".last-point");
     this.downloadButton = card.querySelector(".download-video");
+    this.messageEl = card.querySelector(".frame-message");
+    this.messageTextEl = card.querySelector(".frame-message p");
     this.lastPoint = null;
     this.resultUrl = "";
     this.resultName = "";
@@ -171,12 +175,17 @@ class FrameWorker {
     });
 
     this.card.querySelector(".reload-frame").addEventListener("click", () => {
-      this.load(state.config.targetUrl).catch((error) => this.fail(error));
+      this.load(getFrameUrl(state.config)).catch((error) => this.fail(error));
     });
 
     this.card.querySelector(".open-frame-tab").addEventListener("click", () => {
       openExternal(state.config.targetUrl);
       this.log("Opened creator page in a new tab for Google sign-in/access.");
+    });
+
+    this.messageEl.querySelector(".open-frame-tab").addEventListener("click", () => {
+      openExternal(state.config.targetUrl);
+      this.log("Opened creator page in a new tab.");
     });
 
     this.card.querySelector(".calibrate-toggle").addEventListener("click", () => {
@@ -286,11 +295,19 @@ class FrameWorker {
   }
 
   async load(url) {
+    if (!url) {
+      this.showBlockedFrameMessage(
+        "Google refuses to connect inside normal iframes. Open the Google tab, or paste an embeddable same-origin/proxy URL in the optional iframe URL field.",
+      );
+      return;
+    }
+
     this.setStatus("Loading", "running");
     this.resultUrl = "";
     this.resultName = "";
     this.downloadButton.disabled = true;
     this.log(`Loading ${url}`);
+    this.hideFrameMessage();
 
     this.iframe.src = "about:blank";
     await sleep(100);
@@ -318,6 +335,20 @@ class FrameWorker {
     this.hasLoadedOnce = true;
     this.setStatus("Loaded", "done");
     this.log("Frame load event received");
+  }
+
+  showBlockedFrameMessage(message) {
+    this.iframe.src = "about:blank";
+    this.hasLoadedOnce = false;
+    this.setStatus("Open tab", "error");
+    this.card.classList.add("frame-blocked");
+    this.messageTextEl.textContent = message;
+    this.log(message);
+  }
+
+  hideFrameMessage() {
+    this.card.classList.remove("frame-blocked");
+    this.messageTextEl.textContent = "";
   }
 
   setStatus(text, tone = "") {
@@ -593,6 +624,7 @@ function init() {
 function bindStaticEvents() {
   [
     elements.targetUrl,
+    elements.embedUrl,
     elements.containerCount,
     elements.promptSplitMode,
     elements.openVeoFirst,
@@ -627,7 +659,7 @@ function bindStaticEvents() {
   elements.refreshFramesButton.addEventListener("click", () => {
     syncConfigFromUi();
     state.workers.forEach((worker) => {
-      worker.load(state.config.targetUrl).catch((error) => worker.fail(error));
+      worker.load(getFrameUrl(state.config)).catch((error) => worker.fail(error));
     });
     setGlobalStatus("Refreshing", "running");
   });
@@ -686,7 +718,7 @@ function buildContainers() {
     elements.workspace.appendChild(fragment);
     const worker = new FrameWorker(index, elements.workspace.lastElementChild);
     state.workers.push(worker);
-    worker.load(state.config.targetUrl).catch((error) => worker.fail(error));
+    worker.load(getFrameUrl(state.config)).catch((error) => worker.fail(error));
   }
 }
 
@@ -763,12 +795,19 @@ async function runPromptOnWorker(worker, prompt) {
   shouldStop();
   const config = readConfigFromUi();
   state.config = config;
+  const frameUrl = getFrameUrl(config);
+  if (!frameUrl) {
+    worker.showBlockedFrameMessage(
+      "Automation needs an iframe-safe URL. Google Docs blocks Vercel iframes, so open Google in a tab or provide a trusted embeddable/proxy URL.",
+    );
+    throw new Error("Google Docs blocks normal iframe embedding. Provide an embeddable iframe URL to automate inside the app.");
+  }
   const automator = new FrameAutomator(worker, config);
   worker.setStatus("Running", "running");
   worker.log(`Starting prompt: ${prompt.slice(0, 120)}${prompt.length > 120 ? "..." : ""}`);
 
   if (config.reloadBeforeEachPrompt || !worker.hasLoadedOnce) {
-    await worker.load(config.targetUrl);
+    await worker.load(frameUrl);
   }
 
   await sleep(config.timing.initialDelayMs);
@@ -801,6 +840,7 @@ async function runPromptOnWorker(worker, prompt) {
 function readConfigFromUi(options = {}) {
   const config = clone(DEFAULT_CONFIG);
   config.targetUrl = elements.targetUrl.value.trim() || DEFAULT_CONFIG.targetUrl;
+  config.embedUrl = elements.embedUrl.value.trim();
   config.containerCount = clamp(Number(elements.containerCount.value) || DEFAULT_CONFIG.containerCount, 1, 8);
   config.promptSplitMode = elements.promptSplitMode.value;
   config.openVeoFirst = elements.openVeoFirst.checked;
@@ -837,6 +877,7 @@ function readConfigFromUi(options = {}) {
 
 function writeConfigToUi(config) {
   elements.targetUrl.value = config.targetUrl;
+  elements.embedUrl.value = config.embedUrl || "";
   elements.containerCount.value = String(config.containerCount);
   elements.promptSplitMode.value = config.promptSplitMode;
   elements.openVeoFirst.checked = config.openVeoFirst;
@@ -1054,6 +1095,21 @@ function downloadUrl(url, filename) {
 
 function openExternal(url) {
   window.open(url, "_blank", "noopener,noreferrer");
+}
+
+function getFrameUrl(config) {
+  if (config.embedUrl) {
+    return config.embedUrl;
+  }
+  return isGoogleDocsUrl(config.targetUrl) ? "" : config.targetUrl;
+}
+
+function isGoogleDocsUrl(url) {
+  try {
+    return new URL(url).hostname === "docs.google.com";
+  } catch (error) {
+    return false;
+  }
 }
 
 function downloadBlob(text, filename, type) {

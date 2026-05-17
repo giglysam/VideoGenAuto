@@ -78,13 +78,19 @@ https://docs.google.com/videos/u/0/create?usp=vids_home
 
 ## Important Google access requirement
 
-If the embedded Google page says "You need access", the browser is not authenticated with
-a Google account that can use that creator URL. A Vercel frontend cannot add, spoof, or
-override Google authentication headers for an iframe. The iframe must use the user's real
-Google session cookies.
+If the embedded Google page says "refused to connect", that is Google intentionally
+blocking `docs.google.com` from being framed by another site. A Vercel frontend cannot
+repair that with different iframe headers. The app now detects this case and shows a
+clear blocked-state instead of a broken iframe.
 
-Use the **Open Google sign-in tab** button, sign in with the correct account, then return
-to the app and click **Refresh iframes**.
+If Google says "You need access", the browser is not authenticated with a Google account
+that can use that creator URL. A Vercel frontend cannot add, spoof, or override Google
+authentication headers for an iframe. The page must use the user's real Google session
+cookies.
+
+Use the **Open Google sign-in tab** button to open the creator page outside the iframe.
+If you have a trusted same-origin proxy/custom browser URL that is allowed to be framed,
+paste it into **Embeddable iframe URL** and then click **Refresh iframes**.
 
 Browser isolation can also prevent a parent page from reading or controlling a
 cross-origin iframe. This app does not disable or bypass browser security. The automation
